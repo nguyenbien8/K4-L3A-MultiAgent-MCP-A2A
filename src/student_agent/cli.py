@@ -44,9 +44,9 @@ async def _run(root: Path) -> None:
         discovered_tools = await gateway.list_tools()
         if not discovered_tools:
             raise RuntimeError("MCP Gateway returned no tools")
-        for case_id in case_set.case_ids:
+        for i, case_id in enumerate(case_set.case_ids):
             case = case_set.cases[case_id]
-            trace.emit(case_id=case_id, event_type="case_received", actor="coordinator")
+            print(f"[{i+1}/{len(case_set.case_ids)}] Processing {case_id}...")
             output = await solve_case(case, gateway, trace)
             contracts.validate_output(output, f"outputs/{case_id}.json")
             if output.get("case_id") != case_id:
@@ -57,7 +57,10 @@ async def _run(root: Path) -> None:
                 json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
             )
             temporary.replace(target)
-            trace.emit(case_id=case_id, event_type="case_finalized", actor="coordinator")
+            # Delay giữa các case để tránh rate limit
+            if i < len(case_set.case_ids) - 1:
+                await asyncio.sleep(5)
+
 
 
 def parser() -> argparse.ArgumentParser:

@@ -24,7 +24,9 @@ class EvidenceGateway:
     async def call(self, tool_name: str, *, case_id: str, **arguments: str) -> dict[str, Any]:
         payload = {"case_id": case_id, **arguments}
         result = await self._session.call_tool(tool_name, arguments=payload)
-        if result.isError:
+        # Handle both old (isError) and new (is_error) MCP SDK attribute names
+        is_error = getattr(result, "isError", None) or getattr(result, "is_error", None)
+        if is_error:
             message = " ".join(
                 block.text for block in result.content if getattr(block, "text", None)
             )
