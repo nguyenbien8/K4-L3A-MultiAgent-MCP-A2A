@@ -49,7 +49,7 @@ trả về khớp tool và giữ nguyên `evidence_ref`; claim chỉ nhận refs
 
 | Failure | Retry? | Fallback | Trace event/code |
 | --- | --- | --- | --- |
-| MCP timeout/lỗi tạm thời | Một lần, cùng arguments | `insufficient_evidence` | handoff / `EVIDENCE_INCOMPLETE` |
+| MCP timeout/lỗi tạm thời | Tối đa 3 lần, cùng arguments, chờ 1s rồi 2s giữa các lần | `insufficient_evidence` | handoff / `EVIDENCE_INCOMPLETE` |
 | Not found | Không | `insufficient_evidence` | handoff / `EVIDENCE_INCOMPLETE` |
 | Source conflict | Không | `needs_investigation`; không tự chọn nguồn | `policy_decided` |
 | Invalid envelope/result | Không | fail validation; không consume ref | không emit consume |
