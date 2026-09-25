@@ -10,6 +10,8 @@ from .mcp_gateway import EvidenceGateway
 from .trace import TraceWriter
 
 RETRYABLE = (TimeoutError, ConnectionError, RuntimeError)
+MCP_ATTEMPTS = 3
+MCP_BACKOFF_SECONDS = 1.0
 PAYMENT_ISSUES = {
     "canceled_order_paid",
     "unavailable_order_paid",
@@ -309,7 +311,7 @@ async def _evidence(
 ) -> dict[str, Any] | None:
     if tool_name not in AGENT_TOOLS[actor]:
         raise ValueError(f"{actor} is not allowed to call {tool_name}")
-    for attempt in (1, 2):
+    for attempt in range(1, MCP_ATTEMPTS + 1):
         try:
             result = await asyncio.wait_for(
                 gateway.call(tool_name, case_id=case_id, **arguments), timeout=30
@@ -329,9 +331,10 @@ async def _evidence(
             )
             return result
         except RETRYABLE:
-            if attempt == 2:
+            if attempt == MCP_ATTEMPTS:
                 return None
-            await asyncio.sleep(0)
+            # The gateway is occasionally slow or drops a call; back off before retrying.
+            await asyncio.sleep(MCP_BACKOFF_SECONDS * attempt)
     return None
 
 
